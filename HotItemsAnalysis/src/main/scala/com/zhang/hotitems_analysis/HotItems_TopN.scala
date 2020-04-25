@@ -3,6 +3,7 @@ package com.zhang.hotitems_analysis
 import java.sql.Timestamp
 import java.util.Properties
 
+import Util.ProducerKafka
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.common.state.{ListState, ListStateDescriptor}
@@ -45,7 +46,7 @@ object HotItems_TopN {
     //设置waterMark,这个地方导包的时候选择org.apache.flink.streaming.api.TimeCharacteristic不然出不来EventTime
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
     env.setParallelism(3)
-
+    ProducerKafka.writeToKafka("UserBehavior")
 
     //1.读取数据
     val properties = new Properties()
@@ -59,7 +60,7 @@ object HotItems_TopN {
     properties.setProperty("auto.offset.reset", "latest")
 
     //    val dataStream: DataStream[UserBehavior] = env.readTextFile("D:\\ideaworkspace\\Flink_UserBehaviorAnalysis\\HotItemsAnalysis\\src\\main\\resources\\UserBehavior.csv")
-    val dataStream: DataStream[UserBehavior] = env.addSource(new FlinkKafkaConsumer[String]("hotitems", new SimpleStringSchema(), properties))
+    val dataStream: DataStream[UserBehavior] = env.addSource(new FlinkKafkaConsumer[String]("UserBehavior", new SimpleStringSchema(), properties))
       .map { data =>
         val strings: Array[String] = data.split(",")
         //封装到样例类
